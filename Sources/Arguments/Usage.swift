@@ -124,14 +124,44 @@ public struct Usage: CustomStringConvertible {
             return helpName
         }
 
-        func argumentHelp(paddedToLength paddingLength: Int? = nil) -> String {
-            let help = "\(argumentHelpName(paddedToLength: paddingLength))\(tab)\(description)"
+        func argumentHelp(paddedToLength paddingLength: Int? = nil, limitedToLength limit: Int? = nil) -> String {
+            var description = description
 
             if let `default` {
-                return "\(help) (default: \(`default`))"
-            } else {
-                return help
+                description += " (default: \(`default`))"
             }
+
+            let fallback = "\(argumentHelpName(paddedToLength: paddingLength))\(tab)\(description)"
+
+            guard let paddingLength, let limit, fallback.count > limit else {
+                return fallback
+            }
+
+            guard limit > paddingLength else {
+                assertionFailure("Limit (\(limit)) should be greater than padding length (\(paddingLength))")
+                return fallback
+            }
+
+            let allowedDescriptionWidth = limit - paddingLength - tab.count
+
+            guard allowedDescriptionWidth > 0 else {
+                assertionFailure("Length limit must be a number that results in a allowed width greater than zero.")
+                return fallback
+            }
+
+            var lines = description.breakOnWordsIntoLines(ofLength: allowedDescriptionWidth)
+
+            if lines.isEmpty {
+                return fallback
+            }
+
+            for (index, line) in zip(lines.indices, lines) {
+                lines[index] = index == 0
+                ? "\(argumentHelpName(paddedToLength: paddingLength))\(tab)\(line)"
+                : "\(Array(repeating: " ", count: limit - allowedDescriptionWidth).joined())\(line)"
+            }
+
+            return lines.joined(separator: "\n")
         }
     }
 
@@ -212,12 +242,11 @@ public struct Usage: CustomStringConvertible {
 
         let widestArgument = arguments.reduce(into: 0) { $0 = max($0, $1.argumentHelpName().count) }
         let uniqueArgumentsByKind = self.uniqueArgumentsByKind
-        func appendArgumentSection(title: String, arguments: [Argument]) {
+        func appendArgumentSection(title: String, arguments: [Argument], terminator: String = "\n") {
             help += """
             \(title):
-            \(arguments.map { " " + $0.argumentHelp(paddedToLength: widestArgument) }.joined(separator: "\n"))
-
-
+            \(arguments.map { $0.argumentHelp(paddedToLength: widestArgument, limitedToLength: 80).indented(tabs: 1, tab: " ") }.joined(separator: "\n"))
+            \(terminator)
             """
         }
 
@@ -227,9 +256,44 @@ public struct Usage: CustomStringConvertible {
 
         let optionsAndFlags = uniqueArgumentsByKind[.option, default: []] + uniqueArgumentsByKind[.flag, default: []]
         if !optionsAndFlags.isEmpty {
-            appendArgumentSection(title: "OPTIONS", arguments: optionsAndFlags)
+            appendArgumentSection(title: "OPTIONS", arguments: optionsAndFlags, terminator: "")
         }
 
         return help
+    }
+}
+
+extension String {
+    func indented(tabs: Int = 1, tab: String = "\t") -> String {
+        self.components(separatedBy: "\n")
+            .map { Array(repeating: tab, count: tabs).joined() + $0 }
+            .joined(separator: "\n")
+    }
+
+    func breakOnWordsIntoLines(ofLength lineLength: Int) -> [String] {
+        let words = self.components(separatedBy: .whitespaces)
+        var lines = [String]()
+        var line = ""
+        for word in words {
+            var proposedLine = line
+            if proposedLine.isEmpty {
+                proposedLine = word
+            } else {
+                proposedLine += " \(word)"
+            }
+
+            if proposedLine.count > lineLength {
+                lines.append(line)
+                line = word
+            } else {
+                line = proposedLine
+            }
+        }
+
+        if !line.isEmpty {
+            lines.append(line)
+        }
+
+        return lines
     }
 }

@@ -10,7 +10,8 @@ class UsageTests: XCTestCase {
                 [
                     "command",
                     .argument(.both(short: "s", long: "something"), description: "This is something that you'll want to use."),
-                    .option("another", description: "Another thing that might matter."), "literal",
+                    .option("another", default: "one bites the dust", description: "Another thing that might matter. This description is really long and should wrap to multiple lines. It's gonna get lengthy."),
+                    "literal",
                     .flag("flag", description: "Turn this on for a good time.")
                 ]
             ]
@@ -25,11 +26,12 @@ class UsageTests: XCTestCase {
 
         ARGUMENTS:
          -s, --something        This is something that you'll want to use.
-
+        
         OPTIONS:
-         --another <another>    Another thing that might matter.
+         --another <another>    Another thing that might matter. This description is
+                                really long and should wrap to multiple lines. It's gonna
+                                get lengthy. (default: one bites the dust)
          --flag                 Turn this on for a good time.
-
 
         """)
     }
