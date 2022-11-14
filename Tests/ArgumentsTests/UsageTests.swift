@@ -16,7 +16,7 @@ class UsageTests: XCTestCase {
             ]
         )
 
-        XCTAssertEqual(usage.help, """
+        XCTAssertEqual("\(usage)", """
         OVERVIEW: This is the overview
 
         SEE ALSO: this one, that one

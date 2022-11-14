@@ -2,7 +2,7 @@ import Foundation
 
 private let tab = "    "
 
-public struct Usage {
+public struct Usage: CustomStringConvertible {
     public enum CommandComponent: Hashable, ExpressibleByStringLiteral {
         case raw(String)
         case argument(Argument)
@@ -170,7 +170,7 @@ public struct Usage {
         return uniqueArgumentsByKind
     }
 
-    public var help: String {
+    public var description: String {
         var help = ""
 
         if let overview {

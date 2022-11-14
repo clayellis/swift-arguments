@@ -7,21 +7,13 @@ public struct Arguments {
         self.usage = usage
     }
 
-    private func printUsage() {
-        if let usage {
-            print(usage.help)
-        }
-    }
-
     public mutating func consumeOption(named name: String) throws -> String {
         guard let nameIndex = arguments.firstIndex(of: name) else {
-            printUsage()
             throw ArgumentError.missingOption(name: name)
         }
 
         let valueIndex = arguments.index(after: nameIndex)
         guard valueIndex < arguments.endIndex else {
-            printUsage()
             throw ArgumentError.missingOption(name: name)
         }
 
@@ -32,7 +24,6 @@ public struct Arguments {
 
     public mutating func consumeArgument() throws -> String {
         guard !arguments.isEmpty else {
-            printUsage()
             throw ArgumentError.missingArgument
         }
 
