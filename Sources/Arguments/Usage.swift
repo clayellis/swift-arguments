@@ -145,6 +145,10 @@ public struct Usage {
         self.commands = commands
     }
 
+    public init(overview: String? = nil, seeAlso: [String]? = nil, commands: [CommandComponent]...) {
+        self.init(overview: overview, seeAlso: seeAlso, commands: commands)
+    }
+
     private var arguments: Set<Argument> {
         let arguments = commands.flatMap { $0 }.compactMap { component -> Argument? in
             switch component {
