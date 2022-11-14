@@ -1,3 +1,5 @@
+import Foundation
+
 public struct Arguments {
     var arguments: [String]
     var usage: Usage?
@@ -9,12 +11,12 @@ public struct Arguments {
 
     public mutating func consumeOption(named name: String) throws -> String {
         guard let nameIndex = arguments.firstIndex(of: name) else {
-            throw ArgumentError.missingOption(name: name)
+            throw ArgumentError(reason: .missingOption(name: name), usage: usage)
         }
 
         let valueIndex = arguments.index(after: nameIndex)
         guard valueIndex < arguments.endIndex else {
-            throw ArgumentError.missingOption(name: name)
+            throw ArgumentError(reason: .missingOption(name: name), usage: usage)
         }
 
         let option = arguments[valueIndex]
@@ -24,7 +26,7 @@ public struct Arguments {
 
     public mutating func consumeArgument() throws -> String {
         guard !arguments.isEmpty else {
-            throw ArgumentError.missingArgument
+            throw ArgumentError(reason: .missingArgument, usage: usage)
         }
 
         return arguments.removeFirst()
@@ -40,9 +42,43 @@ public struct Arguments {
     }
 }
 
-public enum ArgumentError: Error {
-    case missingOption(name: String)
-    case invalidOption(name: String, value: String, expectedType: any ExpressibleByArgument.Type)
-    case missingArgument
-    case invalidArgument(value: String, expectedType: any ExpressibleByArgument.Type)
+public struct ArgumentError: LocalizedError, CustomStringConvertible {
+    let reason: Reason
+    let usage: Usage?
+
+    enum Reason {
+        case missingOption(name: String)
+        case invalidOption(name: String, value: String, expectedType: any ExpressibleByArgument.Type)
+        case missingArgument
+        case invalidArgument(value: String, expectedType: any ExpressibleByArgument.Type)
+    }
+
+    public var description: String {
+        "\(reason)"
+    }
+
+    public var errorDescription: String? {
+        var description = ""
+        switch reason {
+        case let .missingOption(name):
+            description = "Missing expected option '\(name)'."
+
+        case let .invalidOption(name, value, expectedType):
+            description = "Could not convert option '\(name)' value '\(value)' to expected type: \(expectedType)."
+
+        case .missingArgument:
+            description = "Missing expected argument."
+
+        case let .invalidArgument(value, expectedType):
+            description = "Could not convert argument value '\(value)' to expected type: \(expectedType)."
+        }
+
+        if let usage {
+            description += """
+            \(usage.description)
+            """
+        }
+
+        return description
+    }
 }
