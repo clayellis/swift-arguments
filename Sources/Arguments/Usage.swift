@@ -245,7 +245,7 @@ public struct Usage: CustomStringConvertible {
         func appendArgumentSection(title: String, arguments: [Argument], terminator: String = "\n") {
             help += """
             \(title):
-            \(arguments.map { $0.argumentHelp(paddedToLength: widestArgument, limitedToLength: 80).indented(tabs: 1, tab: " ") }.joined(separator: "\n"))
+            \(arguments.map { $0.argumentHelp(paddedToLength: widestArgument, limitedToLength: 100).indented(tabs: 1, tab: " ") }.joined(separator: "\n"))
             \(terminator)
             """
         }
